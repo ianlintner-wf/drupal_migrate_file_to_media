@@ -1,6 +1,6 @@
 #Migrate File Entities to Media Entities
 
-This module allows you to migrate file entities to media entitiees using the migrate module.
+This module allows you to migrate Drupal 8.0 file entities to Drupal 8.5 media entities using the migrate module.
 
 ##Main features:
 - While migrating the files, a binary hash of all images is calculated and duplicate files are recognized. If the same file was uploaded multiple times, only one media entity will be created.
