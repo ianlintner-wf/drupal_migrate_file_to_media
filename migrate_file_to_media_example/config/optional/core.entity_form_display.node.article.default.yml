@@ -5,8 +5,6 @@ dependencies:
     - field.field.node.article.body
     - field.field.node.article.field_image
     - field.field.node.article.field_image2
-    - field.field.node.article.field_image2_media
-    - field.field.node.article.field_image_media
     - field.field.node.article.field_tags
     - image.style.thumbnail
     - node.type.article
@@ -49,24 +47,6 @@ content:
       preview_image_style: thumbnail
     third_party_settings: {  }
     type: image_image
-    region: content
-  field_image2_media:
-    type: entity_reference_autocomplete
-    weight: 123
-    settings:
-      match_operator: CONTAINS
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-    region: content
-  field_image_media:
-    type: entity_reference_autocomplete
-    weight: 122
-    settings:
-      match_operator: CONTAINS
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
     region: content
   field_tags:
     type: entity_reference_autocomplete_tags
