@@ -1,0 +1,12 @@
+name: migrate_file_to_media
+type: module
+description: Migrate file fields to media fields.
+package: liip
+core: 8.x
+dependencies:
+- media
+- file
+- migrate_drupal_d8
+- migrate
+- migrate_tools
+- migrate_plus

@@ -1,0 +1,51 @@
+# 02
+# This migration adds a translation to existing media entities if a translated file / image field is found.
+
+id: article_images_de
+label: Article Image to Media Migration (german translation)
+migration_group: media
+source:
+  plugin: media_entity_generator
+  entity_type: node
+  bundle: article
+  langcode: 'de'
+
+  # provide a list of all field names you want to migrate
+  field_names:
+  - field_image
+  - field_image2
+
+destination:
+  plugin: entity:media
+  translations: true
+
+process:
+  bundle:
+    plugin: default_value
+    default_value: image
+
+  mid:
+    plugin: migration_lookup
+    migration: article_images
+    source: target_id
+    no_stub: true
+
+  name:
+    plugin: media_name
+    source: file_name
+
+  # This process plugin will skip the whole row if a duplicate image is found.
+  unique_file_id:
+    plugin: check_duplicate
+    source: target_id
+
+  # Map the field image
+  field_media_image/target_id: target_id
+  field_media_image/alt: alt
+  field_media_image/title: title
+
+  langcode: langcode
+
+migration_dependencies:
+  required:
+  - article_images

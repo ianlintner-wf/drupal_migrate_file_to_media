@@ -1,0 +1,69 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the migrate_to_media module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function migrate_to_media_install() {
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function migrate_to_media_uninstall() {
+}
+
+/**
+ * Implements hook_schema().
+ */
+function migrate_file_to_media_schema() {
+  $schema['migrate_file_to_media_mapping'] = [
+    'description' => 'Mapping of files.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique record ID.',
+      ],
+      'type' => [
+        'type' => 'varchar_ascii',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Type of the record.',
+      ],
+      'fid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'default' => NULL,
+        'description' => 'The unique file id of the file',
+      ],
+      'target_fid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'default' => NULL,
+        'description' => 'The file id of the same file binarywise.',
+      ],
+      'binary_hash' => [
+        'type' => 'varchar_ascii',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Type of the record.',
+      ],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'type' => ['type'],
+      'fid' => ['fid'],
+      'target_fid' => ['target_fid'],
+      'binary_hash' => ['binary_hash'],
+    ],
+  ];
+
+  return $schema;
+}

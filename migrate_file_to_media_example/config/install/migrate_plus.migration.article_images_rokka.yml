@@ -1,0 +1,46 @@
+# 04
+# This is an example how to move all the images directly to rokka.io / image cdn.
+id: article_images_rokka
+label: Article Image to Media Migration including rokka.io
+migration_group: media
+
+source:
+  plugin: media_entity_generator
+  entity_type: node
+  bundle: article
+  langcode: 'en'
+
+  # provide a list of all field names you want to migrate
+  field_names:
+  - field_image
+  - field_image2
+
+destination:
+  plugin: entity:media
+
+process:
+  bundle:
+    plugin: default_value
+    default_value: image
+
+  name:
+    plugin: media_name
+    source: file_name
+
+  # This process plugin will skip the whole row if a duplicate image is found.
+  unique_file_id:
+    plugin: check_duplicate
+    source: target_id
+
+  # Map the field image
+  field_media_image/target_id:
+    plugin: media_file_copy
+    move: FALSE
+    reuse: TRUE
+    path: 'rokka://'
+    source: target_id
+
+  field_media_image/alt: alt
+  field_media_image/title: title
+
+  langcode: langcode

@@ -1,0 +1,14 @@
+name: migrate_file_to_media_example
+type: module
+description: Migrate file fields to media fields.
+package: liip
+core: 8.x
+dependencies:
+- migrate_file_to_media
+- rokka
+config_devel:
+  install:
+  - migrate_plus.migration.article_images
+  - migrate_plus.migration.article_images_de
+  - migrate_plus.migration.article_media
+  - migrate_plus.migration.article_images_rokka

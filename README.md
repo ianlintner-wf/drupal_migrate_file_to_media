@@ -26,14 +26,53 @@ drush migrate:file-media-fields node article image image
 For all file fields the corresponding media entity reference fields will be automatically created suffixed by <field_name>_media.
 
 
-## Create a custom the migration per content type
+## Prepare duplicate file detection
+
+In order to detect duplicate files / images, run the following drush command to calculate a binary hash 
+for all files. The data will be saved to the table "migrate_file_to_media_mapping". You need to run this 
+drush command to be able to import media entities.
+
+```
+drush migrate:duplicate-file-detection
+```
+
+## Create a custom the migration per content type based on the migrate_file_to_media_example module
 - Create a custom module
-- Copy over the migration template and change it according to you file names
-- Check the migration using
+- Create your own migration templates based on the examples in migrate_file_to_media_example.
+
+### Step 1:
+File `config/install/migrate_plus.migration.article_images.yml`
+
+This is the starting point. This migration creates a unique media entity from all files / images referenced by 
+fields in the configuration `field_names` of the source plugin.
+In the example, we have two image fields called: "field_image" and "field_image2".
+
+#### Important:
+The drush command to calculate the binary hash need to be run before you can use the
+media_entity_generator source plugin.
+
+### Using rokka.io on Step 1:
+File `config/install/migrate_plus.migration.article_images_rokka.yml`
+
+This is an example migration, how to move all images to the rokka.io image cdn. You need to install the
+drupal rokka module.
+
+### Step 2:
+File `config/install/migrate_plus.migration.article_images_de.yml`
+
+This migration adds a translation to existing media entities if a translated file / image field is found.
+
+### Step 3:
+File `config/install/migrate_plus.migration.article_media.yml`
+
+This migration links the newly created media entities with entity reference field on the target bundle.
+
+
+### Check the migration using
 ```
 drush migrate:status
 ```
-- Run the migration using
+### Run the migration using
 ```
 drush migrate:import <migration_name>
 ```
