@@ -22,19 +22,28 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class MediaEntityGenerator extends SourcePluginBase implements ContainerFactoryPluginInterface {
 
-  /** @var array */
+  /**
+   * @var array*/
   protected $source_fields = [];
 
-  /** @var \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager */
+  /**
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
   private $entity_field_manager;
 
-  /** @var EntityTypeManagerInterface $entity_storage_manager */
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   private $entity_type_manager;
 
-  /** @var \Drupal\Core\Database\Connection */
+  /**
+   * @var \Drupal\Core\Database\Connection
+   */
   private $connection;
 
-  /** @var \Drupal\Core\Entity\Query\QueryFactory */
+  /**
+   * @var \Drupal\Core\Entity\Query\QueryFactory
+   */
   private $entity_query;
 
   /**
@@ -99,7 +108,7 @@ class MediaEntityGenerator extends SourcePluginBase implements ContainerFactoryP
    * {@inheritdoc}
    */
   public function prepareRow(Row $row) {
-    // Set source file
+    // Set source file.
     if (!empty($row->getSource()['target_id'])) {
       $file = File::load($row->getSource()['target_id']);
       $row->setSourceProperty('file_path', $file->getFileUri());

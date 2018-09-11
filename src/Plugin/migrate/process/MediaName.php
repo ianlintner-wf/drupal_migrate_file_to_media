@@ -6,7 +6,6 @@ use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
 
-
 /**
  *
  * @MigrateProcessPlugin(
@@ -19,14 +18,15 @@ class MediaName extends ProcessPluginBase {
    * {@inheritdoc}
    */
   public function transform($source, MigrateExecutableInterface $migrate_executable, Row $row, $destination_property) {
-    // Use alt tag if available
+    // Use alt tag if available.
     if (!empty($row->getSourceProperty('alt'))) {
       return substr($row->getSourceProperty('alt'), 0, 255);
     }
-    // Use filename as fallback
+    // Use filename as fallback.
     elseif (!empty($source)) {
       return $source;
     }
     return '';
   }
+
 }
