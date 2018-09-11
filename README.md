@@ -10,6 +10,9 @@ This module allows you to migrate Drupal 8.0 file entities to Drupal 8.5 media e
 ## Usage
 - Install the module.
 
+##Preparation: Install media core module
+Before you can start, you need to install the media module of Drupal Core. This will automatically create 4 (in Drupal 8.5) or 5 (in Drupal 8.6) media bundle types for you, namely image, video, file and audio.
+
 
 ## Prepare media fields
 
