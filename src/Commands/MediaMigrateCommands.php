@@ -140,17 +140,25 @@ class MediaMigrateCommands extends DrushCommands {
   ) {
     $field = FieldConfig::loadByName($entity_type, $bundle, $new_field_name);
     if (empty($field)) {
-      $field_storage = FieldStorageConfig::create(
-        [
-          'field_name' => $new_field_name,
-          'entity_type' => $entity_type,
-          'cardinality' => $existing_field->getFieldStorageDefinition()
-            ->getCardinality(),
-          'type' => 'entity_reference',
-          'settings' => ['target_type' => 'media'],
-        ]
-      );
-      $field_storage->save();
+
+      // Load existing field storage.
+      $field_storage = FieldStorageConfig::loadByName($entity_type, $new_field_name);
+
+      // Create a field storage if none found.
+      if(empty($field_storage)) {
+        $field_storage = FieldStorageConfig::create(
+          [
+            'field_name' => $new_field_name,
+            'entity_type' => $entity_type,
+            'cardinality' => $existing_field->getFieldStorageDefinition()
+              ->getCardinality(),
+            'type' => 'entity_reference',
+            'settings' => ['target_type' => 'media'],
+          ]
+        );
+        $field_storage->save();
+      }
+
       $field = entity_create(
         'field_config',
         [
