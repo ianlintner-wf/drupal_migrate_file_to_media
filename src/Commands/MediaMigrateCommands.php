@@ -15,13 +15,16 @@ use Drush\Commands\DrushCommands;
  */
 class MediaMigrateCommands extends DrushCommands {
 
-  /** @var \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager */
+  /**
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface*/
   private $entity_field_manager;
 
-  /** @var EntityTypeManagerInterface $entity_storage_manager */
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface*/
   private $entity_type_manager;
 
-  /** @var \Drupal\Core\Database\Connection */
+  /**
+   * @var \Drupal\Core\Database\Connection*/
   private $connection;
 
   /**
@@ -50,8 +53,6 @@ class MediaMigrateCommands extends DrushCommands {
    * @param $bundle
    * @param $source_field_type
    * @param $target_media_bundle
-   *
-   *
    */
   public function migrateFileFields($entity_type, $bundle, $source_field_type, $target_media_bundle) {
 
@@ -84,7 +85,7 @@ class MediaMigrateCommands extends DrushCommands {
           if (count($target_bundles)) {
             foreach ($target_bundles as $target_bundle) {
               if ($handler == 'default:media' && $target_bundle == $target_media_bundle) {
-                //$media_fields[$name] = $field_settings;
+                // $media_fields[$name] = $field_settings;.
                 $this->output()->writeln('Found existing media field: ' . $name);
               }
             }
@@ -93,7 +94,7 @@ class MediaMigrateCommands extends DrushCommands {
       }
     }
 
-    // Create missing fields
+    // Create missing fields.
     $missing_fields = array_diff_key($source_fields, $media_fields);
 
     foreach ($missing_fields as $new_field_name => $field) {
@@ -105,7 +106,8 @@ class MediaMigrateCommands extends DrushCommands {
           $new_field_name,
           $target_media_bundle
         );
-      } catch (\Exception $ex) {
+      }
+      catch (\Exception $ex) {
         $this->output()
           ->writeln("Error while creating media field: {$new_field_name}.");
       }
@@ -145,7 +147,7 @@ class MediaMigrateCommands extends DrushCommands {
       $field_storage = FieldStorageConfig::loadByName($entity_type, $new_field_name);
 
       // Create a field storage if none found.
-      if(empty($field_storage)) {
+      if (empty($field_storage)) {
         $field_storage = FieldStorageConfig::create(
           [
             'field_name' => $new_field_name,
@@ -173,7 +175,7 @@ class MediaMigrateCommands extends DrushCommands {
       );
       $field->save();
 
-      // Update Form Widget
+      // Update Form Widget.
       /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $definition */
       $definition = $this->entity_type_manager->getStorage('entity_form_display')
         ->load($entity_type . '.' . $bundle . '.' . 'default');
@@ -193,7 +195,6 @@ class MediaMigrateCommands extends DrushCommands {
    *
    * @command migrate:duplicate-file-detection
    * @aliases migrate-duplicate
-   *
    */
   public function duplicateImageDetection() {
 
@@ -214,31 +215,43 @@ class MediaMigrateCommands extends DrushCommands {
 
     foreach ($files as $file) {
       /** @var \Drupal\file\Entity\File $file */
-      $data = file_get_contents($file->getFileUri());
-      $binary_hash = sha1($data);
+      try {
+        $data = file_get_contents($file->getFileUri());
+        if (!empty($data)) {
 
-      $query = $this->connection->select('migrate_file_to_media_mapping', 'map');
-      $query->fields('map');
-      $query->condition('binary_hash', $binary_hash, '=');
-      $result = $query->execute()->fetchObject();
+          $binary_hash = sha1($data);
 
-      $duplicate_fid = $file->id();
-      if ($result) {
-        $existing_file = File::load($result->fid);
-        $duplicate_fid = $existing_file->id();
-        $this->output()->writeln("Duplicate found for file {$existing_file->id()}");
+          $query = $this->connection->select('migrate_file_to_media_mapping', 'map');
+          $query->fields('map');
+          $query->condition('binary_hash', $binary_hash, '=');
+          $result = $query->execute()->fetchObject();
+
+          $duplicate_fid = $file->id();
+          if ($result) {
+            $existing_file = File::load($result->fid);
+            $duplicate_fid = $existing_file->id();
+            $this->output()->writeln("Duplicate found for file {$existing_file->id()}");
+          }
+
+          $this->connection->insert('migrate_file_to_media_mapping')
+            ->fields([
+              'type' => 'image',
+              'fid' => $file->id(),
+              'target_fid' => $duplicate_fid,
+              'binary_hash' => $binary_hash,
+            ])
+            ->execute();
+
+          $this->output()->writeln("Added binary hash {$binary_hash} for file {$file->id()}");
+        }
+        else {
+          $this->output()->writeln("File empty: Skipped binary hash for file {$file->id()}");
+        }
+      }
+      catch (\Exception $ex) {
+        $this->output()->writeln("File not found: Skipped binary hash for file {$file->id()}");
       }
 
-      $this->connection->insert('migrate_file_to_media_mapping')
-        ->fields([
-          'type' => 'image',
-          'fid' => $file->id(),
-          'target_fid' => $duplicate_fid,
-          'binary_hash' => $binary_hash,
-        ])
-        ->execute();
-
-      $this->output()->writeln("Added binary hash {$binary_hash} for file file {$file->id()}");
     }
   }
 
