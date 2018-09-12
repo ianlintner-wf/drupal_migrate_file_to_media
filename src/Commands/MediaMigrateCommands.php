@@ -8,7 +8,10 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
+use Drupal\media\Entity\Media;
+use Drupal\rokka\Entity\RokkaMetadata;
 use Drush\Commands\DrushCommands;
+use Symfony\Component\Console\Input\InputOption;
 
 /**
  * Drush 9 commands for migrate_file_to_media.
@@ -16,15 +19,18 @@ use Drush\Commands\DrushCommands;
 class MediaMigrateCommands extends DrushCommands {
 
   /**
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface*/
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
   private $entity_field_manager;
 
   /**
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface*/
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   private $entity_type_manager;
 
   /**
-   * @var \Drupal\Core\Database\Connection*/
+   * @var \Drupal\Core\Database\Connection
+   */
   private $connection;
 
   /**
@@ -195,8 +201,13 @@ class MediaMigrateCommands extends DrushCommands {
    *
    * @command migrate:duplicate-file-detection
    * @aliases migrate-duplicate
+   *
+   * @option arr An option that takes multiple values.
    */
-  public function duplicateImageDetection() {
+  public function duplicateImageDetection($options = [
+    'filter-schema' => InputOption::VALUE_REQUIRED,
+    'check-existing-media' => FALSE,
+  ]) {
 
     // Only query permanent files.
     $query = $this->connection->select('file_managed', 'f');
@@ -204,6 +215,11 @@ class MediaMigrateCommands extends DrushCommands {
     $query->condition('status', 1, '=');
     $query->leftJoin('migrate_file_to_media_mapping', 'm', 'm.fid = f.fid');
     $query->isNull('m.fid');
+
+    if ($options['filter-schema']) {
+      $query->condition('f.uri', $options['filter-schema'] . '%', 'LIKE');
+    }
+
     $fids = array_map(
       function ($fid) {
         return $fid->fid;
@@ -233,12 +249,22 @@ class MediaMigrateCommands extends DrushCommands {
             $this->output()->writeln("Duplicate found for file {$existing_file->id()}");
           }
 
+          $existing_media = NULL;
+          if ($options['check-existing-media']) {
+            // Check for an existing media entity.
+            $query_media = $this->connection->select('migrate_file_to_media_mapping_media', 'media');
+            $query_media->fields('media');
+            $query_media->condition('binary_hash', $binary_hash, '=');
+            $existing_media = $query_media->execute()->fetchObject();
+          }
+
           $this->connection->insert('migrate_file_to_media_mapping')
             ->fields([
               'type' => 'image',
               'fid' => $file->id(),
               'target_fid' => $duplicate_fid,
               'binary_hash' => $binary_hash,
+              'media_id' => $existing_media ? $existing_media->entity_id : NULL,
             ])
             ->execute();
 
@@ -251,8 +277,89 @@ class MediaMigrateCommands extends DrushCommands {
       catch (\Exception $ex) {
         $this->output()->writeln("File not found: Skipped binary hash for file {$file->id()}");
       }
-
     }
   }
 
+  /**
+   * Find duplicate media entities.
+   *
+   * @command migrate:duplicate-media-detection
+   * @param $bundle
+   * @aliases migrate-duplicate
+   *
+   * @option arr An option that takes multiple values.
+   */
+  public function duplicateMediaImageDetection($bundle) {
+
+    // Only query permanent files.
+    $query = $this->connection->select('media', 'me');
+    $query->fields('me', ['mid']);
+    $query->leftJoin('migrate_file_to_media_mapping_media', 'm', 'm.entity_id = me.mid');
+    $query->isNull('m.entity_id');
+    $query->condition('bundle', $bundle);
+
+    $mids = array_map(
+      function ($mid) {
+        return $mid->mid;
+      },
+      $query->execute()->fetchAll()
+    );
+
+    $medias = Media::loadMultiple($mids);
+
+    foreach ($medias as $media) {
+      /** @var \Drupal\media\Entity\Media $media */
+      try {
+        /** @var \Drupal\file\Entity\File $file */
+        $file = $media->field_media_image->entity;
+
+        $rokka_metadata = NULL;
+        if(strpos($file->getFileUri(), 'rokka://') === 0) {
+          $query = $this->connection->select('rokka_metadata', 'rokka');
+          $query->fields('rokka');
+          $query->condition('uri', $file->getFileUri(), '=');
+          $rokka_metadata = $query->execute()->fetchObject();
+          $data = 'empty';
+        }
+        else {
+          $data = file_get_contents($file->getFileUri());
+        }
+
+        if (!empty($data)) {
+
+          $binary_hash = $rokka_metadata ? $rokka_metadata->binary_hash : sha1($data);
+
+          $query = $this->connection->select('migrate_file_to_media_mapping_media', 'map');
+          $query->fields('map');
+          $query->condition('binary_hash', $binary_hash, '=');
+          $result = $query->execute()->fetchObject();
+
+          $duplicate_id = $media->id();
+          if ($result) {
+            $existing_media = Media::load($result->entity_id);
+            $duplicate_id = $existing_media->id();
+            $this->output()->writeln("Duplicate found for file {$existing_media->id()}");
+          }
+
+          $this->connection->insert('migrate_file_to_media_mapping_media')
+            ->fields([
+              'media_bundle' => $bundle,
+              'fid' => $file->id(),
+              'entity_id' => $media->id(),
+              'target_entity_id' => $duplicate_id,
+              'binary_hash' => $binary_hash,
+            ])
+            ->execute();
+
+          $this->output()->writeln("Added binary hash {$binary_hash} for media {$media->id()}");
+        }
+        else {
+          $this->output()->writeln("Media empty: Skipped binary hash for media {$media->id()}");
+        }
+      }
+      catch (\Exception $ex) {
+        $this->output()->writeln("Media not found: Skipped binary hash for media {$media->id()}");
+      }
+    }
+  }
 }

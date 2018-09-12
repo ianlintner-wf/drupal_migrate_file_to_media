@@ -22,7 +22,6 @@ class CheckDuplicate extends ProcessPluginBase {
    * {@inheritdoc}
    */
   public function transform($value, MigrateExecutableInterface $migrate_executable, Row $row, $destination_property) {
-
     if ($value) {
       $query = \Drupal::database()->select('migrate_file_to_media_mapping', 'map');
       $query->fields('map');
@@ -33,7 +32,6 @@ class CheckDuplicate extends ProcessPluginBase {
       if (!empty($result->fid)) {
         return $result->fid;
       }
-
     }
     throw new MigrateSkipRowException();
   }
