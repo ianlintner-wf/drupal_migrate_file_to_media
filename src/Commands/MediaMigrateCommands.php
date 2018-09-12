@@ -280,14 +280,14 @@ class MediaMigrateCommands extends DrushCommands {
   }
 
   /**
-   * Find duplicate media entities.
+   * Calculate hash values of media entities. Can later be used together with
+   * migrate:duplicate-file-detection to find existing media files.
    *
    * @command migrate:duplicate-media-detection
    * @param $bundle
    *
    * @aliases migrate-duplicate
    *
-   * @option arr An option that takes multiple values.
    */
   public function duplicateMediaImageDetection($bundle) {
 
