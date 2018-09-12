@@ -7,7 +7,6 @@ use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
 
-
 /**
  *
  * @MigrateProcessPlugin(
@@ -34,4 +33,5 @@ class CheckMediaDuplicate extends ProcessPluginBase {
     }
 
   }
+
 }

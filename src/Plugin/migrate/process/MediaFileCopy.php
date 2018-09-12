@@ -12,7 +12,6 @@ use Drupal\migrate\Row;
 /**
  * Copies or local file for usage in media module.
  *
- *
  * Examples:
  *
  * @code
@@ -76,6 +75,9 @@ class MediaFileCopy extends FileCopy implements ContainerFactoryPluginInterface 
     throw new MigrateException("File $source could not be copied to $destination");
   }
 
+  /**
+   * Save file to a defined destination.
+   */
   protected function saveFile($source, $destination, $replace = FILE_EXISTS_RENAME) {
     $data = file_get_contents($source);
     $file = file_save_data($data, $destination, $replace);

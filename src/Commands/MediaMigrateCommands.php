@@ -9,7 +9,6 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
 use Drupal\media\Entity\Media;
-use Drupal\rokka\Entity\RokkaMetadata;
 use Drush\Commands\DrushCommands;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -285,6 +284,7 @@ class MediaMigrateCommands extends DrushCommands {
    *
    * @command migrate:duplicate-media-detection
    * @param $bundle
+   *
    * @aliases migrate-duplicate
    *
    * @option arr An option that takes multiple values.
@@ -314,7 +314,7 @@ class MediaMigrateCommands extends DrushCommands {
         $file = $media->field_media_image->entity;
 
         $rokka_metadata = NULL;
-        if(strpos($file->getFileUri(), 'rokka://') === 0) {
+        if (strpos($file->getFileUri(), 'rokka://') === 0) {
           $query = $this->connection->select('rokka_metadata', 'rokka');
           $query->fields('rokka');
           $query->condition('uri', $file->getFileUri(), '=');
@@ -362,4 +362,5 @@ class MediaMigrateCommands extends DrushCommands {
       }
     }
   }
+
 }

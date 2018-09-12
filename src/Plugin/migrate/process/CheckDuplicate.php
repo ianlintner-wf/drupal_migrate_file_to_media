@@ -7,7 +7,6 @@ use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
 
-
 /**
  *
  * @MigrateProcessPlugin(
@@ -35,4 +34,5 @@ class CheckDuplicate extends ProcessPluginBase {
     }
     throw new MigrateSkipRowException();
   }
+
 }

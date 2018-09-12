@@ -24,12 +24,12 @@ function migrate_to_media_uninstall() {
  */
 function migrate_file_to_media_update_8001() {
 
-  $field = array(
+  $field = [
     'type' => 'int',
     'unsigned' => TRUE,
     'default' => NULL,
     'description' => 'Existing media id.',
-  );
+  ];
   $schema = Database::getConnection()->schema();
   $schema->addField('migrate_file_to_media_mapping', 'media_id', $field);
 }
@@ -42,7 +42,6 @@ function migrate_file_to_media_update_8002() {
   $schema = Database::getConnection()->schema();
   $schema->createTable('migrate_file_to_media_mapping_media', $tables['migrate_file_to_media_mapping_media']);
 }
-
 
 /**
  * Implements hook_schema().
