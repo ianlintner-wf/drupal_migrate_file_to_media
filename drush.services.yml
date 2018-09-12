@@ -4,3 +4,8 @@ services:
     arguments: ['@entity_field.manager', '@entity_type.manager', '@database']
     tags:
     - { name: drush.command }
+
+  migrate_file_to_media.media_migration_generator:
+    class: Drupal\migrate_file_to_media\Generators\MediaMigrateGenerator
+    tags:
+    - { name: drush.generator }
