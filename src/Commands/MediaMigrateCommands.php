@@ -91,7 +91,8 @@ class MediaMigrateCommands extends DrushCommands {
             foreach ($target_bundles as $target_bundle) {
               if ($handler == 'default:media' && $target_bundle == $target_media_bundle) {
                 // $media_fields[$name] = $field_settings;.
-                $this->output()->writeln('Found existing media field: ' . $name);
+                $this->output()
+                  ->writeln('Found existing media field: ' . $name);
               }
             }
           }
@@ -201,7 +202,7 @@ class MediaMigrateCommands extends DrushCommands {
    * @command migrate:duplicate-file-detection
    * @aliases migrate-duplicate
    *
-   * @option arr An option that takes multiple values.
+   * @option An option that takes multiple values.
    */
   public function duplicateImageDetection($options = [
     'filter-schema' => InputOption::VALUE_REQUIRED,
@@ -231,10 +232,7 @@ class MediaMigrateCommands extends DrushCommands {
     foreach ($files as $file) {
       /** @var \Drupal\file\Entity\File $file */
       try {
-        $data = file_get_contents($file->getFileUri());
-        if (!empty($data)) {
-
-          $binary_hash = sha1($data);
+        if (!empty($binary_hash = $this->calculateBinaryHash($file))) {
 
           $query = $this->connection->select('migrate_file_to_media_mapping', 'map');
           $query->fields('map');
@@ -245,7 +243,8 @@ class MediaMigrateCommands extends DrushCommands {
           if ($result) {
             $existing_file = File::load($result->fid);
             $duplicate_fid = $existing_file->id();
-            $this->output()->writeln("Duplicate found for file {$existing_file->id()}");
+            $this->output()
+              ->writeln("Duplicate found for file {$existing_file->id()}");
           }
 
           $existing_media = NULL;
@@ -267,14 +266,17 @@ class MediaMigrateCommands extends DrushCommands {
             ])
             ->execute();
 
-          $this->output()->writeln("Added binary hash {$binary_hash} for file {$file->id()}");
+          $this->output()
+            ->writeln("Added binary hash {$binary_hash} for file {$file->id()}");
         }
         else {
-          $this->output()->writeln("File empty: Skipped binary hash for file {$file->id()}");
+          $this->output()
+            ->writeln("File empty: Skipped binary hash for file {$file->id()}");
         }
       }
       catch (\Exception $ex) {
-        $this->output()->writeln("File not found: Skipped binary hash for file {$file->id()}");
+        $this->output()
+          ->writeln("File not found: Skipped binary hash for file {$file->id()}");
       }
     }
   }
@@ -284,10 +286,10 @@ class MediaMigrateCommands extends DrushCommands {
    * migrate:duplicate-file-detection to find existing media files.
    *
    * @command migrate:duplicate-media-detection
+   *
    * @param $bundle
    *
    * @aliases migrate-duplicate
-   *
    */
   public function duplicateMediaImageDetection($bundle) {
 
@@ -313,21 +315,7 @@ class MediaMigrateCommands extends DrushCommands {
         /** @var \Drupal\file\Entity\File $file */
         $file = $media->field_media_image->entity;
 
-        $rokka_metadata = NULL;
-        if (strpos($file->getFileUri(), 'rokka://') === 0) {
-          $query = $this->connection->select('rokka_metadata', 'rokka');
-          $query->fields('rokka');
-          $query->condition('uri', $file->getFileUri(), '=');
-          $rokka_metadata = $query->execute()->fetchObject();
-          $data = 'empty';
-        }
-        else {
-          $data = file_get_contents($file->getFileUri());
-        }
-
-        if (!empty($data)) {
-
-          $binary_hash = $rokka_metadata ? $rokka_metadata->binary_hash : sha1($data);
+        if (!empty($binary_hash = $this->calculateBinaryHash($file))) {
 
           $query = $this->connection->select('migrate_file_to_media_mapping_media', 'map');
           $query->fields('map');
@@ -338,7 +326,8 @@ class MediaMigrateCommands extends DrushCommands {
           if ($result) {
             $existing_media = Media::load($result->entity_id);
             $duplicate_id = $existing_media->id();
-            $this->output()->writeln("Duplicate found for file {$existing_media->id()}");
+            $this->output()
+              ->writeln("Duplicate found for file {$existing_media->id()}");
           }
 
           $this->connection->insert('migrate_file_to_media_mapping_media')
@@ -351,16 +340,46 @@ class MediaMigrateCommands extends DrushCommands {
             ])
             ->execute();
 
-          $this->output()->writeln("Added binary hash {$binary_hash} for media {$media->id()}");
+          $this->output()
+            ->writeln("Added binary hash {$binary_hash} for media {$media->id()}");
         }
         else {
-          $this->output()->writeln("Media empty: Skipped binary hash for media {$media->id()}");
+          $this->output()
+            ->writeln("Media empty: Skipped binary hash for media {$media->id()}");
         }
       }
       catch (\Exception $ex) {
-        $this->output()->writeln("Media not found: Skipped binary hash for media {$media->id()}");
+        $this->output()
+          ->writeln("Media not found: Skipped binary hash for media {$media->id()}");
       }
     }
+  }
+
+  /**
+   *
+   */
+  private function calculateBinaryHash(File $file) {
+
+    // For rokka files, we can use the metadata table to get the correct
+    // binary_hash value.
+    $rokka_metadata = NULL;
+    if (strpos($file->getFileUri(), 'rokka://') === 0) {
+      $query = $this->connection->select('rokka_metadata', 'rokka');
+      $query->fields('rokka');
+      $query->condition('uri', $file->getFileUri(), '=');
+      $rokka_metadata = $query->execute()->fetchObject();
+      $data = 'empty';
+    }
+    else {
+      $data = file_get_contents($file->getFileUri());
+    }
+
+    $binary_hash = NULL;
+    if (!empty($data)) {
+      $binary_hash = $rokka_metadata ? $rokka_metadata->binary_hash : sha1($data);
+    }
+
+    return $binary_hash;
   }
 
 }
