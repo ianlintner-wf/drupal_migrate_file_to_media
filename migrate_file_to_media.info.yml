@@ -6,7 +6,7 @@ core: 8.x
 dependencies:
 - media
 - file
-- migrate_drupal_d8
 - migrate
 - migrate_tools
 - migrate_plus
+- migrate_drupal

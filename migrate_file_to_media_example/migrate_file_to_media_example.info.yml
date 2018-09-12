@@ -8,7 +8,6 @@ dependencies:
 - rokka
 config_devel:
   install:
-  - migrate_plus.migration.article_images
-  - migrate_plus.migration.article_images_de
-  - migrate_plus.migration.article_media
-  - migrate_plus.migration.article_images_rokka
+  - migrate_plus.migration.migrate_file_to_media_example_article_images_step1
+  - migrate_plus.migration.migrate_file_to_media_example_article_images_step1_de
+  - migrate_plus.migration.migrate_file_to_media_example_article_images_step2
