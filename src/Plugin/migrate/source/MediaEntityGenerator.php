@@ -172,6 +172,9 @@ class MediaEntityGenerator extends SourcePluginBase implements ContainerFactoryP
           ->loadMultiple($results);
 
         foreach ($entitites as $id => $entity) {
+          if ($entity->hasTranslation($this->configuration['langcode'])) {
+            $entity = $entity->getTranslation($this->configuration['langcode']);
+          }
 
           foreach ($entity->{$name}->getValue() as $reference) {
             $files_found[] = [
@@ -180,6 +183,7 @@ class MediaEntityGenerator extends SourcePluginBase implements ContainerFactoryP
               'alt' => $reference['alt'],
               'title' => $reference['title'],
               'langcode' => $this->configuration['langcode'],
+              'entity' => $entity,
             ];
           }
         }

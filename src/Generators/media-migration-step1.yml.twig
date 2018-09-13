@@ -21,15 +21,6 @@ process:
   bundle:
     plugin: default_value
     default_value: {{ target_bundle }}
-{% if translation_language %}
-
-  mid:
-    plugin: migration_lookup
-    migration: {{ plugin_id }}_step1
-    source: target_id
-    no_stub: true
-
-{% endif %}
   
   # Using the alt tag if available, else the file name.
   name:
@@ -45,6 +36,15 @@ process:
   unique_file_id:
     plugin: check_duplicate
     source: target_id
+    
+{% if translation_language %}
+  mid:
+    plugin: migration_lookup
+    migration: {{ plugin_id }}_step1
+    source: target_id
+    no_stub: true
+    
+{% endif %}
 
   # Map the field image
   {{ target_field }}/target_id: target_id
@@ -54,7 +54,7 @@ process:
   langcode: langcode
   
 {% if translation_language %}
-migration_dependencies:
-  required:
-  - {{ plugin_id }}_step1
+  content_translation_source:
+    plugin: default_value
+    default_value: {{ lang_code }}
 {% endif %}

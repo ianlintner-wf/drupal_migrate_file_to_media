@@ -3,11 +3,14 @@
 namespace Drupal\migrate_file_to_media\Plugin\migrate\process;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\crop\Entity\Crop;
 use Drupal\file\Entity\File;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\MigrateExecutableInterface;
+use Drupal\migrate\MigrateSkipProcessException;
 use Drupal\migrate\Plugin\migrate\process\FileCopy;
 use Drupal\migrate\Row;
+use Drupal\migrate_plus\Plugin\migrate\process\SkipOnValue;
 
 /**
  * Copies or local file for usage in media module.
@@ -40,6 +43,7 @@ class MediaFileCopy extends FileCopy implements ContainerFactoryPluginInterface 
     if ($row->isStub()) {
       return NULL;
     }
+
     $destination_folder = $this->configuration['path'] ?? 'public://media/';
     $source_file = File::load($source_id);
     $source = $source_file->getFileUri();
@@ -69,6 +73,7 @@ class MediaFileCopy extends FileCopy implements ContainerFactoryPluginInterface 
 
     $final_destination = $this->saveFile($source, $destination);
     if ($final_destination) {
+      $this->updateFocalPoint($source, $final_destination->getFileUri(), $final_destination);
       return $final_destination->id();
     }
 
@@ -82,6 +87,43 @@ class MediaFileCopy extends FileCopy implements ContainerFactoryPluginInterface 
     $data = file_get_contents($source);
     $file = file_save_data($data, $destination, $replace);
     return $file;
+  }
+
+  /**
+   * Update focal point.
+   *
+   * @param $uri_old
+   *   Old URI.
+   * @param $uri_rokka
+   *   Rokka URI.
+   * @param $rokka_file
+   *   Rokka file.
+   */
+  private function updateFocalPoint($uri_old, $uri_rokka, $rokka_file) {
+
+    try {
+
+      /** @var \Drupal\crop\Entity\Crop $old_crop */
+      $old_crop = Crop::findCrop($uri_old, 'focal_point');
+
+      $crop = Crop::create([
+        'type' => 'focal_point',
+        'entity_id' => $rokka_file->id(),
+        'entity_type' => 'file',
+        'uri' => $uri_rokka,
+        'height' => $old_crop->height->value,
+        'width' => $old_crop->width->value,
+        'x' => $old_crop->x->value,
+        'y' => $old_crop->y->value,
+      ]);
+
+      $crop->save();
+
+    }
+    catch (\Exception $exception) {
+      throw new MigrateException('Failed to save the focal point to rokka');
+    }
+
   }
 
 }
