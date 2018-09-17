@@ -41,10 +41,26 @@ drush migrate:duplicate-file-detection
 
 ## Create a custom the migration per content type based on the migrate_file_to_media_example module
 - Create a custom module
-- Create your own migration templates based on the examples in migrate_file_to_media_example.
+- Create your custom migration templates using the included yml generator.
+- The module supports nodes and also paragraphs and any other entity type as a source bundle.
+
+```
+drush generate yml-migrate_file_to_media_migration_media
+```
+```
+Welcome to yml-migrate_file_to_media_migration_media generator!
+–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+ Module machine name:
+  ➤ migrate_file_to_media
+```
+
+The generator will ask you several questions about the module, the source bundle and the target media entity.
+It will generate several files based on your answers, that can be used to migrate the files to media entity.
+
+## Explanation of the generated migration files
 
 ### Step 1:
-File `config/install/migrate_plus.migration.article_images.yml`
+File `config/install/migrate_plus.migration.migrate_file_to_media_example_article_images_step1.yml`
 
 This is the starting point. This migration creates a unique media entity from all files / images referenced by 
 fields in the configuration `field_names` of the source plugin.
@@ -55,18 +71,18 @@ The drush command to calculate the binary hash need to be run before you can use
 media_entity_generator source plugin.
 
 ### Using rokka.io on Step 1:
-File `config/install/migrate_plus.migration.article_images_rokka.yml`
+File `config/install/migrate_plus.migration.migrate_file_to_media_example_article_images_step1_rokka.yml`
 
 This is an example migration, how to move all images to the rokka.io image cdn. You need to install the
 drupal rokka module.
 
 ### Step 2:
-File `config/install/migrate_plus.migration.article_images_de.yml`
+File `config/install/migrate_plus.migration.migrate_file_to_media_example_article_images_step1_de.yml`
 
 This migration adds a translation to existing media entities if a translated file / image field is found.
 
 ### Step 3:
-File `config/install/migrate_plus.migration.article_media.yml`
+File `config/install/migrate_plus.migration.migrate_file_to_media_example_article_images_step2.yml`
 
 This migration links the newly created media entities with entity reference field on the target bundle.
 

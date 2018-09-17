@@ -7,5 +7,6 @@ services:
 
   migrate_file_to_media.media_migration_generator:
     class: Drupal\migrate_file_to_media\Generators\MediaMigrateGenerator
+    arguments: ['@entity_type.manager']
     tags:
     - { name: drush.generator }

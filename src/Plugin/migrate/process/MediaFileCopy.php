@@ -7,10 +7,8 @@ use Drupal\crop\Entity\Crop;
 use Drupal\file\Entity\File;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\MigrateExecutableInterface;
-use Drupal\migrate\MigrateSkipProcessException;
 use Drupal\migrate\Plugin\migrate\process\FileCopy;
 use Drupal\migrate\Row;
-use Drupal\migrate_plus\Plugin\migrate\process\SkipOnValue;
 
 /**
  * Copies or local file for usage in media module.

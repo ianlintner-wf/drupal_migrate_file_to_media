@@ -2,6 +2,7 @@
 
 namespace Drupal\migrate_file_to_media\Generators;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use DrupalCodeGenerator\Command\BaseGenerator;
 use DrupalCodeGenerator\Utils;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,6 +21,21 @@ class MediaMigrateGenerator extends BaseGenerator {
   protected $description = 'Generates yml for File to Media Migration';
 
   protected $templatePath = __DIR__;
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+    $this->entityTypeManager = $entity_type_manager;
+    parent::__construct();
+  }
 
   /**
    * {@inheritdoc}
@@ -49,6 +65,10 @@ class MediaMigrateGenerator extends BaseGenerator {
     if ($vars['source_field_name']) {
       $vars['source_field_name'] = array_map('trim', explode(',', strtolower($vars['source_field_name'])));
     }
+
+    // ID Key for the entity type (nid for node, id for paragraphs).
+    $entityType = $this->entityTypeManager->getDefinition($vars['entity_type']);
+    $vars['id_key'] = $entityType->getKey('id');
 
     $this->addFile()
       ->path('config/install/migrate_plus.migration.{plugin_id}_step1.yml')

@@ -48,7 +48,3 @@ process:
   field_media_image/title: title
 
   langcode: langcode
-  
-migration_dependencies:
-  required:
-  - migrate_file_to_media_example_article_images_step1
