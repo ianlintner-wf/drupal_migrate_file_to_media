@@ -30,5 +30,5 @@ process:
     no_stub: true
 
 migration_dependencies:
-  required:
+  optional:
   - migrate_file_to_media_example_article_images_step1
