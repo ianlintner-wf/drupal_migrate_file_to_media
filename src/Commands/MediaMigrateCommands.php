@@ -240,21 +240,21 @@ class MediaMigrateCommands extends DrushCommands {
       /** @var \Drupal\file\Entity\File $file */
       $file = File::load($row->getSourceProperty('target_id'));
       try {
+        
+        // Skip existing entries is command is run multiple times.
+        $skip_processed = $this->connection->select('migrate_file_to_media_mapping', 'map');
+        $skip_processed->fields('map');
+        $skip_processed->condition('fid', $file->id(), '=');
+        $skip_processed->condition('migration_id', $migration_instance->getPluginId(), '=');
+        $skip_processed = $skip_processed->execute()->fetchObject();
+
+        if (!empty($skip_processed)) {
+          $this->output()->writeln(dt("File {$file->id()} already processed."));
+          $source->next();
+          continue;
+        }
+
         if (!empty($binary_hash = $this->calculateBinaryHash($file))) {
-
-          // Skip existing entries is command is run multiple times.
-          $skip_processed = $this->connection->select('migrate_file_to_media_mapping', 'map');
-          $skip_processed->fields('map');
-          $skip_processed->condition('fid', $file->id(), '=');
-          $skip_processed->condition('migration_id', $migration_instance->getPluginId(), '=');
-          $skip_processed = $skip_processed->execute()->fetchObject();
-
-          if (!empty($skip_processed)) {
-            $this->output()->writeln(dt("File {$file->id()} already processed."));
-            $source->next();
-            continue;
-          }
-
           // Query for duplicates.
           $query = $this->connection->select('migrate_file_to_media_mapping', 'map');
           $query->fields('map');
