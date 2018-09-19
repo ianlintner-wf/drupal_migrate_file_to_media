@@ -242,6 +242,20 @@ class MediaMigrateCommands extends DrushCommands {
       try {
         if (!empty($binary_hash = $this->calculateBinaryHash($file))) {
 
+          // Skip existing entries is command is run multiple times.
+          $skip_processed = $this->connection->select('migrate_file_to_media_mapping', 'map');
+          $skip_processed->fields('map');
+          $skip_processed->condition('fid', $file->id(), '=');
+          $skip_processed->condition('migration_id', $migration_instance->getPluginId(), '=');
+          $skip_processed = $skip_processed->execute()->fetchObject();
+
+          if (!empty($skip_processed)) {
+            $this->output()->writeln(dt("File {$file->id()} already processed."));
+            $source->next();
+            continue;
+          }
+
+          // Query for duplicates.
           $query = $this->connection->select('migrate_file_to_media_mapping', 'map');
           $query->fields('map');
           $query->condition('binary_hash', $binary_hash, '=');
@@ -256,6 +270,8 @@ class MediaMigrateCommands extends DrushCommands {
           }
 
           $existing_media = NULL;
+
+          // Check for existing media entities from previous migrations.
           if ($options['check-existing-media']) {
             // Check for an existing media entity.
             $query_media = $this->connection->select('migrate_file_to_media_mapping_media', 'media');
@@ -276,16 +292,16 @@ class MediaMigrateCommands extends DrushCommands {
             ->execute();
 
           $this->output()
-            ->writeln("Added binary hash {$binary_hash} for file {$file->id()}");
+            ->writeln(dt("Added binary hash {$binary_hash} for file {$file->id()}"));
         }
         else {
           $this->output()
-            ->writeln("File empty: Skipped binary hash for file {$file->id()}");
+            ->writeln(dt("File empty: Skipped binary hash for file {$file->id()}"));
         }
       }
       catch (\Exception $ex) {
         $this->output()
-          ->writeln("File not found: Skipped binary hash for file {$file->id()}");
+          ->writeln(dt("File not found: Skipped binary hash for file {$file->id()}"));
       }
 
       $source->next();
