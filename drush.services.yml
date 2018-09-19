@@ -1,7 +1,7 @@
 services:
   migrate_file_to_media.commands:
     class: \Drupal\migrate_file_to_media\Commands\MediaMigrateCommands
-    arguments: ['@entity_field.manager', '@entity_type.manager', '@database']
+    arguments: ['@entity_field.manager', '@entity_type.manager', '@database', '@plugin.manager.migration']
     tags:
     - { name: drush.command }
 

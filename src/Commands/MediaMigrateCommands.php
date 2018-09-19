@@ -2,6 +2,7 @@
 
 namespace Drupal\migrate_file_to_media\Commands;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -9,8 +10,8 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
 use Drupal\media\Entity\Media;
+use Drupal\migrate\Plugin\MigrationPluginManager;
 use Drush\Commands\DrushCommands;
-use Symfony\Component\Console\Input\InputOption;
 
 /**
  * Drush 9 commands for migrate_file_to_media.
@@ -33,6 +34,13 @@ class MediaMigrateCommands extends DrushCommands {
   private $connection;
 
   /**
+   * Migration plugin manager service.
+   *
+   * @var \Drupal\migrate\Plugin\MigrationPluginManager
+   */
+  protected $migrationPluginManager;
+
+  /**
    * MediaMigrateCommands constructor.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
@@ -41,11 +49,13 @@ class MediaMigrateCommands extends DrushCommands {
   public function __construct(
     EntityFieldManagerInterface $entityFieldManager,
     EntityTypeManagerInterface $entity_type_manager,
-    Connection $connection
+    Connection $connection,
+    MigrationPluginManager $migrationPluginManager
   ) {
     $this->entity_field_manager = $entityFieldManager;
     $this->entity_type_manager = $entity_type_manager;
     $this->connection = $connection;
+    $this->migrationPluginManager = $migrationPluginManager;
   }
 
   /**
@@ -202,35 +212,33 @@ class MediaMigrateCommands extends DrushCommands {
    * @command migrate:duplicate-file-detection
    * @aliases migrate-duplicate
    *
+   * @param $migration_name
+   *
    * @option An option that takes multiple values.
    */
-  public function duplicateImageDetection($options = [
-    'filter-schema' => InputOption::VALUE_REQUIRED,
-    'check-existing-media' => FALSE,
-  ]) {
+  public function duplicateImageDetection($migration_name, $options = ['check-existing-media' => FALSE]) {
 
-    // Only query permanent files.
-    $query = $this->connection->select('file_managed', 'f');
-    $query->fields('f', ['fid']);
-    $query->condition('status', 1, '=');
-    $query->leftJoin('migrate_file_to_media_mapping', 'm', 'm.fid = f.fid');
-    $query->isNull('m.fid');
+    $manager = $this->migrationPluginManager;
+    $plugins = $manager->createInstances([]);
 
-    if ($options['filter-schema']) {
-      $query->condition('f.uri', $options['filter-schema'] . '%', 'LIKE');
+    /** @var \Drupal\migrate\Plugin\Migration $migration_instance */
+    $migration_instance = NULL;
+    foreach ($plugins as $id => $migration) {
+      if (in_array(Unicode::strtolower($id), [$migration_name])) {
+        $migration_instance = $migration;
+      }
     }
 
-    $fids = array_map(
-      function ($fid) {
-        return $fid->fid;
-      },
-      $query->execute()->fetchAll()
-    );
+    // Use the migration source plugin to calculate the binary hash of
+    // the related files only.
+    $source = $migration_instance->getSourcePlugin();
+    $source->rewind();
 
-    $files = File::loadMultiple($fids);
+    while ($source->valid()) {
+      $row = $source->current();
 
-    foreach ($files as $file) {
       /** @var \Drupal\file\Entity\File $file */
+      $file = File::load($row->getSourceProperty('target_id'));
       try {
         if (!empty($binary_hash = $this->calculateBinaryHash($file))) {
 
@@ -259,6 +267,7 @@ class MediaMigrateCommands extends DrushCommands {
           $this->connection->insert('migrate_file_to_media_mapping')
             ->fields([
               'type' => 'image',
+              'migration_id' => $migration_instance->getPluginId(),
               'fid' => $file->id(),
               'target_fid' => $duplicate_fid,
               'binary_hash' => $binary_hash,
@@ -278,6 +287,8 @@ class MediaMigrateCommands extends DrushCommands {
         $this->output()
           ->writeln("File not found: Skipped binary hash for file {$file->id()}");
       }
+
+      $source->next();
     }
   }
 

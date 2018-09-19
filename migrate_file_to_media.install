@@ -44,6 +44,22 @@ function migrate_file_to_media_update_8002() {
 }
 
 /**
+ * Add new migration_id field to migrate_file_to_media_mapping table.
+ */
+function migrate_file_to_media_update_8003() {
+
+  $field = [
+    'type' => 'varchar_ascii',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+    'description' => 'Migration ID.',
+  ];
+  $schema = Database::getConnection()->schema();
+  $schema->addField('migrate_file_to_media_mapping', 'migration_id', $field);
+}
+
+/**
  * Implements hook_schema().
  */
 function migrate_file_to_media_schema() {
@@ -54,6 +70,13 @@ function migrate_file_to_media_schema() {
         'type' => 'serial',
         'not null' => TRUE,
         'description' => 'Primary Key: Unique record ID.',
+      ],
+      'migration_id' => [
+        'type' => 'varchar_ascii',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Migration ID.',
       ],
       'type' => [
         'type' => 'varchar_ascii',
@@ -141,6 +164,7 @@ function migrate_file_to_media_schema() {
     'primary key' => ['id'],
     'indexes' => [
       'media_bundle' => ['media_bundle'],
+      'migration_id' => ['migration_id'],
       'fid' => ['fid'],
       'entity_id' => ['entity_id'],
       'target_entity_id' => ['target_entity_id'],
