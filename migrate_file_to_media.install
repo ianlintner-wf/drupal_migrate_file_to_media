@@ -114,6 +114,7 @@ function migrate_file_to_media_schema() {
     'primary key' => ['id'],
     'indexes' => [
       'type' => ['type'],
+      'migration_id' => ['migration_id'],
       'fid' => ['fid'],
       'target_fid' => ['target_fid'],
       'binary_hash' => ['binary_hash'],
@@ -164,7 +165,6 @@ function migrate_file_to_media_schema() {
     'primary key' => ['id'],
     'indexes' => [
       'media_bundle' => ['media_bundle'],
-      'migration_id' => ['migration_id'],
       'fid' => ['fid'],
       'entity_id' => ['entity_id'],
       'target_entity_id' => ['target_entity_id'],
