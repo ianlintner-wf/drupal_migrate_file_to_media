@@ -43,10 +43,22 @@ class MediaFileCopy extends FileCopy implements ContainerFactoryPluginInterface 
     }
 
     $destination_folder = $this->configuration['path'] ?? 'public://media/';
-    $source_file = File::load($source_id);
-    $source = $source_file->getFileUri();
 
-    $destination = NULL;
+    $destination = $destination_folder . $row->getSourceProperty('file_name');
+
+    // If the source path or URI represents a remote resource, delegate to the
+    // download plugin.
+    if (!$this->isLocalUri($source_id)) {
+      $source = $this->downloadPlugin->transform([
+        $source_id,
+        'public://download/' . $row->getSourceProperty('file_name'),
+      ], $migrate_executable, $row, $destination_property);
+    }
+    else {
+      $source_file = File::load($source_id);
+      $source = $source_file->getFileUri();
+    }
+
     if ($source_file) {
       $destination = $destination_folder . $source_file->getFilename();
     }
@@ -104,18 +116,21 @@ class MediaFileCopy extends FileCopy implements ContainerFactoryPluginInterface 
       /** @var \Drupal\crop\Entity\Crop $old_crop */
       $old_crop = Crop::findCrop($uri_old, 'focal_point');
 
-      $crop = Crop::create([
-        'type' => 'focal_point',
-        'entity_id' => $rokka_file->id(),
-        'entity_type' => 'file',
-        'uri' => $uri_rokka,
-        'height' => $old_crop->height->value,
-        'width' => $old_crop->width->value,
-        'x' => $old_crop->x->value,
-        'y' => $old_crop->y->value,
-      ]);
+      if (!empty($old_crop)) {
 
-      $crop->save();
+        $crop = Crop::create([
+          'type' => 'focal_point',
+          'entity_id' => $rokka_file->id(),
+          'entity_type' => 'file',
+          'uri' => $uri_rokka,
+          'height' => $old_crop->height->value,
+          'width' => $old_crop->width->value,
+          'x' => $old_crop->x->value,
+          'y' => $old_crop->y->value,
+        ]);
+
+        $crop->save();
+      }
 
     }
     catch (\Exception $exception) {

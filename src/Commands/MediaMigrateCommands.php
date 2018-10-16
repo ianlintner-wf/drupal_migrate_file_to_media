@@ -239,8 +239,16 @@ class MediaMigrateCommands extends DrushCommands {
 
       /** @var \Drupal\file\Entity\File $file */
       $file = File::load($row->getSourceProperty('target_id'));
+
+      if (empty($file)) {
+        $file = File::create([
+          'fid' => $row->getSourceProperty('target_id'),
+          'uri' => $row->getSourceProperty('file_path'),
+        ]);
+      }
+
       try {
-        
+
         // Skip existing entries is command is run multiple times.
         $skip_processed = $this->connection->select('migrate_file_to_media_mapping', 'map');
         $skip_processed->fields('map');
