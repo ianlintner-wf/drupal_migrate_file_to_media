@@ -6,6 +6,8 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
@@ -41,6 +43,20 @@ class MediaMigrateCommands extends DrushCommands {
   protected $migrationPluginManager;
 
   /**
+   * The stream wrapper manager service.
+   *
+   * @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface
+   */
+  protected $streamWrapperManager;
+
+  /**
+   * The file system service.
+   *
+   * @var \Drupal\Core\File\FileSystemInterface
+   */
+  protected $fileSystem;
+
+  /**
    * MediaMigrateCommands constructor.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
@@ -50,12 +66,16 @@ class MediaMigrateCommands extends DrushCommands {
     EntityFieldManagerInterface $entityFieldManager,
     EntityTypeManagerInterface $entity_type_manager,
     Connection $connection,
-    MigrationPluginManager $migrationPluginManager
+    MigrationPluginManager $migrationPluginManager,
+    StreamWrapperManagerInterface $stream_wrappers,
+    FileSystemInterface $file_system
   ) {
     $this->entity_field_manager = $entityFieldManager;
     $this->entity_type_manager = $entity_type_manager;
     $this->connection = $connection;
     $this->migrationPluginManager = $migrationPluginManager;
+    $this->streamWrapperManager = $stream_wrappers;
+    $this->fileSystem = $file_system;
   }
 
   /**
@@ -237,15 +257,19 @@ class MediaMigrateCommands extends DrushCommands {
     while ($source->valid()) {
       $row = $source->current();
 
-      /** @var \Drupal\file\Entity\File $file */
-      $file = File::load($row->getSourceProperty('target_id'));
-
-      if (empty($file)) {
+      // Support remote images.
+      if (!$this->isLocalUri($row->getSourceProperty('file_path'))) {
         $file = File::create([
           'fid' => $row->getSourceProperty('target_id'),
           'uri' => $row->getSourceProperty('file_path'),
         ]);
       }
+      else
+      {
+        /** @var \Drupal\file\Entity\File $file */
+        $file = File::load($row->getSourceProperty('target_id'));
+      }
+
 
       try {
 
@@ -272,9 +296,11 @@ class MediaMigrateCommands extends DrushCommands {
           $duplicate_fid = $file->id();
           if ($result) {
             $existing_file = File::load($result->fid);
-            $duplicate_fid = $existing_file->id();
-            $this->output()
-              ->writeln("Duplicate found for file {$existing_file->id()}");
+            if(!empty($existing_file)) {
+              $duplicate_fid = $existing_file->id();
+              $this->output()
+                ->writeln("Duplicate found for file {$existing_file->id()}");
+            }
           }
 
           $existing_media = NULL;
@@ -415,6 +441,30 @@ class MediaMigrateCommands extends DrushCommands {
     }
 
     return $binary_hash;
+  }
+
+  /**
+   * Determines if the given URI or path is considered local.
+   *
+   * A URI or path is considered local if it either has no scheme component,
+   * or the scheme is implemented by a stream wrapper which extends
+   * \Drupal\Core\StreamWrapper\LocalStream.
+   *
+   * @param string $uri
+   *   The URI or path to test.
+   *
+   * @return bool
+   */
+  private function isLocalUri($uri) {
+    $scheme = $this->fileSystem->uriScheme($uri);
+
+    // The vfs scheme is vfsStream, which is used in testing. vfsStream is a
+    // simulated file system that exists only in memory, but should be treated
+    // as a local resource.
+    if ($scheme == 'vfs') {
+      $scheme = FALSE;
+    }
+    return $scheme === FALSE || $this->streamWrapperManager->getViaScheme($scheme) instanceof LocalStream;
   }
 
 }
