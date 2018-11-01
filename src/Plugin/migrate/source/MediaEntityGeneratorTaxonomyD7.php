@@ -122,6 +122,17 @@ class MediaEntityGeneratorTaxonomyD7 extends Term implements ContainerFactoryPlu
   /**
    * {@inheritdoc}
    */
+  public function getIds() {
+    return [
+      'target_id' => [
+        'type' => 'integer',
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function initializeIterator() {
 
     $query_files = $this->select('file_managed', 'f')
@@ -146,7 +157,9 @@ class MediaEntityGeneratorTaxonomyD7 extends Term implements ContainerFactoryPlu
           // Support remote file urls.
           $file_url = $all_files[$reference['fid']]['uri'];
           if (!empty($this->configuration['d7_file_url'])) {
-            $file_url = str_replace('public://', $this->configuration['d7_file_url'], $file_url);
+            $file_url = str_replace('public://', '', $file_url);
+            $file_path = rawurlencode($file_url);
+            $file_url = $this->configuration['d7_file_url'] . $file_path;
           }
 
           if (!empty($all_files[$reference['fid']]['uri'])) {

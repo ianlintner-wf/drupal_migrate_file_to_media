@@ -21,10 +21,11 @@ class FileIdLookup extends MigrationLookup {
    * {@inheritdoc}
    */
   public function transform($value, MigrateExecutableInterface $migrate_executable, Row $row, $destination_property) {
-    if ($value['target_id']) {
+    if ($value['target_id'] || $value['fid']) {
+      $fid = !empty($value['target_id']) ? $value['target_id'] : $value['fid'];
       $query = \Drupal::database()->select('migrate_file_to_media_mapping', 'map');
       $query->fields('map');
-      $query->condition('fid', $value['target_id'], '=');
+      $query->condition('fid', $fid, '=');
       $result = $query->execute()->fetchObject();
 
       if ($result) {

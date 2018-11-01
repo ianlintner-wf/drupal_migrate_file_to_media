@@ -135,6 +135,16 @@ class MediaEntityGeneratorD7 extends Node implements ContainerFactoryPluginInter
     ];
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getIds() {
+    return [
+      'target_id' => [
+        'type' => 'integer',
+      ],
+    ];
+  }
 
   /**
    * {@inheritdoc}
@@ -209,7 +219,9 @@ class MediaEntityGeneratorD7 extends Node implements ContainerFactoryPluginInter
           // Support remote file urls.
           $file_url = $all_files[$reference['fid']]['uri'];
           if(!empty($this->configuration['d7_file_url'])) {
-            $file_url = str_replace('public://', $this->configuration['d7_file_url'], $file_url);
+            $file_url = str_replace('public://', '', $file_url);
+            $file_path = urlencode($file_url);
+            $file_url = $this->configuration['d7_file_url'] . $file_path;
           }
 
           if (!empty($all_files[$reference['fid']]['uri'])) {
@@ -230,5 +242,4 @@ class MediaEntityGeneratorD7 extends Node implements ContainerFactoryPluginInter
     }
     return new \ArrayIterator($files_found);
   }
-
 }
