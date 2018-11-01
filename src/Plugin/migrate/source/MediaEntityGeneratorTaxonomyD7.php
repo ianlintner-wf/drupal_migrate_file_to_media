@@ -11,17 +11,17 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
-use Drupal\node\Plugin\migrate\source\d7\Node;
+use Drupal\taxonomy\Plugin\migrate\source\d7\Term;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Returns bare-bones information about every available file entity.
  *
  * @MigrateSource(
- *   id = "media_entity_generator_d7",
+ *   id = "media_entity_generator_d7_taxonomy",
  * )
  */
-class MediaEntityGeneratorD7 extends Node implements ContainerFactoryPluginInterface {
+class MediaEntityGeneratorTaxonomyD7 extends Term implements ContainerFactoryPluginInterface {
 
   /**
    * @var array
@@ -47,11 +47,6 @@ class MediaEntityGeneratorD7 extends Node implements ContainerFactoryPluginInter
    * @var \Drupal\Core\Entity\Query\QueryFactory
    */
   private $entity_query;
-
-  /**
-   * The join options between the node and the node_revisions table.
-   */
-  const JOIN = 'n.vid = nr.vid';
 
   /**
    * MediaEntityGenerator constructor.
@@ -117,68 +112,11 @@ class MediaEntityGeneratorD7 extends Node implements ContainerFactoryPluginInter
     );
   }
 
+  /**
+   *
+   */
   public function count($refresh = FALSE) {
     return $this->initializeIterator()->count();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function fields() {
-    return [
-      'target_id' => $this->t('The file entity ID.'),
-      'file_id' => $this->t('The file entity ID.'),
-      'file_path' => $this->t('The file path.'),
-      'file_name' => $this->t('The file name.'),
-      'file_alt' => $this->t('The file arl.'),
-      'file_title' => $this->t('The file title.'),
-    ];
-  }
-
-
-  /**
-   * {@inheritdoc}
-   */
-  public function query() {
-
-    // Select node in its last revision.
-    $query = $this->select('node_revision', 'nr')
-      ->fields('n', [
-        'nid',
-        'type',
-        'language',
-        'status',
-        'created',
-        'changed',
-        'comment',
-        'promote',
-        'sticky',
-        'tnid',
-        'translate',
-      ])
-      ->fields('nr', [
-        'vid',
-        'title',
-        'log',
-        'timestamp',
-      ]);
-    $query->addField('n', 'uid', 'node_uid');
-    $query->addField('nr', 'uid', 'revision_uid');
-    $query->innerJoin('node', 'n', static::JOIN);
-
-    // If the content_translation module is enabled, get the source langcode
-    // to fill the content_translation_source field.
-    if ($this->moduleHandler->moduleExists('content_translation')) {
-      $query->leftJoin('node', 'nt', 'n.tnid = nt.nid');
-      $query->addField('nt', 'language', 'source_langcode');
-    }
-    $this->handleTranslations($query);
-
-    if (isset($this->configuration['bundle'])) {
-      $query->condition('n.type', $this->configuration['bundle']);
-    }
-
-    return $query;
   }
 
   /**
@@ -200,22 +138,21 @@ class MediaEntityGeneratorD7 extends Node implements ContainerFactoryPluginInter
       $parent_iterator = parent::initializeIterator();
 
       foreach ($parent_iterator as $entity) {
-        $nid = $entity['nid'];
-        $vid = $entity['vid'];
-        $field_value = $this->getFieldValues('node', $name, $nid, $vid, $this->configuration['langcode']);
+        $id = $entity['tid'];
+        $field_value = $this->getFieldValues($this->configuration['entity_type'], $name, $id);
 
         foreach ($field_value as $reference) {
 
           // Support remote file urls.
           $file_url = $all_files[$reference['fid']]['uri'];
-          if(!empty($this->configuration['d7_file_url'])) {
+          if (!empty($this->configuration['d7_file_url'])) {
             $file_url = str_replace('public://', $this->configuration['d7_file_url'], $file_url);
           }
 
           if (!empty($all_files[$reference['fid']]['uri'])) {
 
             $files_found[] = [
-              'nid' => $entity['nid'],
+              'tid' => $entity['tid'],
               'target_id' => $reference['fid'],
               'alt' => $reference['alt'],
               'title' => $reference['title'],
