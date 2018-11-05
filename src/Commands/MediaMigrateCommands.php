@@ -249,6 +249,9 @@ class MediaMigrateCommands extends DrushCommands {
       }
     }
 
+    // Force update
+    $migration_instance->getIdMap()->prepareUpdate();
+
     // Use the migration source plugin to calculate the binary hash of
     // the related files only.
     $source = $migration_instance->getSourcePlugin();
