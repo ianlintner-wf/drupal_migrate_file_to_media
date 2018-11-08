@@ -220,7 +220,7 @@ class MediaEntityGeneratorD7 extends Node implements ContainerFactoryPluginInter
           $file_url = $all_files[$reference['fid']]['uri'];
           if(!empty($this->configuration['d7_file_url'])) {
             $file_url = str_replace('public://', '', $file_url);
-            $file_path = urlencode($file_url);
+            $file_path = rawurlencode($file_url);
             $file_url = $this->configuration['d7_file_url'] . $file_path;
           }
 
