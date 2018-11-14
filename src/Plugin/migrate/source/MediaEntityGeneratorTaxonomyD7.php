@@ -81,6 +81,9 @@ class MediaEntityGeneratorTaxonomyD7 extends Term implements ContainerFactoryPlu
     $this->connection = $connection;
     $this->entity_query = $entity_query;
 
+    // Do not Join tables.
+    $this->configuration['ignore_map'] = TRUE;
+
     foreach ($this->configuration['field_names'] as $name) {
       $this->source_fields[$name] = $name;
     }
