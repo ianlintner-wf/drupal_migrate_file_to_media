@@ -14,9 +14,9 @@ This module allows you to migrate Drupal 8.0 file entities to Drupal 8.5 media e
 Before you can start, you need to install the media module of Drupal Core. This will automatically create 4 (in Drupal 8.5) or 5 (in Drupal 8.6) media bundle types for you, namely image, video, file and audio.
 
 
-## Prepare media fields
+## Generate the target media fields
 
-- Prepare the media fields based on the existing file fields using the following drush command:
+- Generate the media fields based on the existing file fields using the following drush command:
 ```
 drush migrate:file-media-fields <entity_type> <bundle> <source_field_type> <target_media_bundle>
 ```
@@ -27,17 +27,6 @@ drush migrate:file-media-fields node article image image
 ```
 
 For all file fields the corresponding media entity reference fields will be automatically created suffixed by <field_name>_media.
-
-
-## Prepare duplicate file detection
-
-In order to detect duplicate files / images, run the following drush command to calculate a binary hash 
-for all files. The data will be saved to the table "migrate_file_to_media_mapping". You need to run this 
-drush command to be able to import media entities.
-
-```
-drush migrate:duplicate-file-detection
-```
 
 ## Create a custom the migration per content type based on the migrate_file_to_media_example module
 - Create a custom module
@@ -51,11 +40,32 @@ drush generate yml-migrate_file_to_media_migration_media
 Welcome to yml-migrate_file_to_media_migration_media generator!
 –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
  Module machine name:
-  ➤ migrate_file_to_media
+  ➤ migrate_file_to_media_example
 ```
 
 The generator will ask you several questions about the module, the source bundle and the target media entity.
 It will generate several files based on your answers, that can be used to migrate the files to media entity.
+
+## Prepare duplicate file detection
+
+In order to detect duplicate files / images, run the following drush command to calculate a binary hash 
+for all files. The data will be saved to the table "migrate_file_to_media_mapping". **You need to run this 
+drush command before you can import media entities.**
+
+```
+drush migrate:duplicate-file-detection <migration_name>
+```
+
+## Migrate the images to media entities
+
+### Check the migrations using
+```
+drush migrate:status
+```
+### Run the migrations using
+```
+drush migrate:import <migration_name>
+```
 
 ## Explanation of the generated migration files
 
@@ -85,13 +95,3 @@ This migration adds a translation to existing media entities if a translated fil
 File `config/install/migrate_plus.migration.migrate_file_to_media_example_article_images_step2.yml`
 
 This migration links the newly created media entities with entity reference field on the target bundle.
-
-
-### Check the migration using
-```
-drush migrate:status
-```
-### Run the migration using
-```
-drush migrate:import <migration_name>
-```

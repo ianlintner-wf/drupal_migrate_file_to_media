@@ -1,6 +1,7 @@
 # File to Media Migration configuration for {{ plugin_label }} migration
 
-id: {{ plugin_id }}_step1
+id: {{ plugin_id }}_step1{% if translation_language %}_{{ lang_code }}{% endif %}
+
 label: {{ plugin_label }} Media
 migration_group: {{ migration_group }}
 source:
