@@ -111,8 +111,10 @@ class MediaEntityGenerator extends SourcePluginBase implements ContainerFactoryP
     // Set source file.
     if (!empty($row->getSource()['target_id'])) {
       $file = File::load($row->getSource()['target_id']);
-      $row->setSourceProperty('file_path', $file->getFileUri());
-      $row->setSourceProperty('file_name', $file->getFilename());
+      if ($file) {
+        $row->setSourceProperty('file_path', $file->getFileUri());
+        $row->setSourceProperty('file_name', $file->getFilename());
+      }
     }
   }
 
