@@ -1,6 +1,6 @@
 # File to Media Migration configuration for Article Images migration
 
-id: migrate_file_to_media_example_article_images_step1
+id: migrate_file_to_media_example_article_images_step1_rokka
 label: Article Images Media
 migration_group: media
 source:
