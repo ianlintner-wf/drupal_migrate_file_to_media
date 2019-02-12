@@ -1,7 +1,7 @@
 name: Migrate File To Media Example
 type: module
 description: Migrate file fields to media fields.
-package: liip
+package: example
 core: 8.x
 dependencies:
 - migrate_file_to_media:migrate_file_to_media
