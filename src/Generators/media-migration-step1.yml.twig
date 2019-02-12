@@ -59,3 +59,10 @@ process:
     plugin: default_value
     default_value: {{ lang_code }}
 {% endif %}
+
+dependencies:
+  module:
+    - {{ machine_name }}
+  enforced:
+    module:
+      - {{ machine_name }}

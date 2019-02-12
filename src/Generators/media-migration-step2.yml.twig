@@ -29,3 +29,10 @@ process:
 migration_dependencies:
   optional:
   - {{ plugin_id }}_step1
+
+dependencies:
+  module:
+    - {{ machine_name }}
+  enforced:
+    module:
+      - {{ machine_name }}
