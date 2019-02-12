@@ -51,7 +51,7 @@ class MediaMigrateGenerator extends BaseGenerator {
       'target_bundle' => new Question('Target Media Type', 'image'),
       'target_field' => new Question('Target Field', 'field_media_image'),
       'lang_code' => new Question('Language Code', 'en'),
-      'translation_languages' => new Question('Translation languages (comma separated)', 'de'),
+      'translation_languages' => new Question('Translation languages (comma separated)', 'none'),
     ];
 
     $vars = &$this->collectVars($input, $output, $questions);
@@ -81,6 +81,9 @@ class MediaMigrateGenerator extends BaseGenerator {
       ->vars($vars);
 
     foreach ($vars['translation_languages'] as $language) {
+      if ($language == 'none' || $language == $vars['lang_code']) {
+        continue;
+      }
       $vars['translation_language'] = $vars['lang_code'] = $language;
 
       $this->addFile()
