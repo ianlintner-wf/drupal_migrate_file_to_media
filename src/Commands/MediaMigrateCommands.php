@@ -117,7 +117,7 @@ class MediaMigrateCommands extends DrushCommands {
           $field_settings = $bundle_fields[$name];
           $target_bundles = $field_settings->getSettings()['handler_settings']['target_bundles'];
           $handler = $field_settings->getSettings()['handler'];
-          if (count($target_bundles)) {
+          if (!empty($target_bundles)) {
             foreach ($target_bundles as $target_bundle) {
               if ($handler == 'default:media' && $target_bundle == $target_media_bundle) {
                 // $media_fields[$name] = $field_settings;.
@@ -153,7 +153,7 @@ class MediaMigrateCommands extends DrushCommands {
           ->writeln("Created media field: {$new_field->getName()}.");
       }
     }
-
+    $this->output()->writeln("Clearing caches.");
     drupal_flush_all_caches();
 
   }
