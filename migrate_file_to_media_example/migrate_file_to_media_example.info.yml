@@ -1,10 +1,10 @@
-name: migrate_file_to_media_example
+name: Migrate File To Media Example
 type: module
 description: Migrate file fields to media fields.
 package: liip
 core: 8.x
 dependencies:
-- migrate_file_to_media
+- migrate_file_to_media:migrate_file_to_media
 config_devel:
   install:
   - migrate_plus.migration.migrate_file_to_media_example_article_images_step1

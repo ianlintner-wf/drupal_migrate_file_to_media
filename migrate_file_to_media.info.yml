@@ -1,12 +1,12 @@
-name: migrate_file_to_media
+name: Migrate File To Media
 type: module
 description: Migrate file fields to media fields.
 package: liip
 core: 8.x
 dependencies:
-- media
-- file
-- migrate
-- migrate_tools
-- migrate_plus
-- migrate_drupal
+- drupal:media
+- drupal:file
+- drupal:migrate
+- migrate_tools:migrate_tools
+- migrate_plus:migrate_plus
+- drupal:migrate_drupal
