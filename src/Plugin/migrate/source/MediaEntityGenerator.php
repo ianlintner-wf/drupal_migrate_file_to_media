@@ -164,7 +164,10 @@ class MediaEntityGenerator extends SourcePluginBase implements ContainerFactoryP
 
       $query = $this->entity_query->get($this->configuration['entity_type']);
 
-      $query->condition($bundleKey, $this->configuration['bundle']);
+      if (!empty($bundleKey)) {
+        $query->condition($bundleKey, $this->configuration['bundle']);
+      }
+
       $query->condition("{$name}.target_id", 0, '>', $this->configuration['langcode']);
       $results = $query->execute();
 
