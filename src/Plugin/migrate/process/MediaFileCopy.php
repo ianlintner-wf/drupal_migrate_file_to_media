@@ -42,7 +42,9 @@ class MediaFileCopy extends FileCopy implements ContainerFactoryPluginInterface 
       return NULL;
     }
 
-    $destination_folder = $this->configuration['path'] ?? 'public://media/';
+    if(empty($destination_folder = $row->getSourceProperty('path_destination'))){
+      $destination_folder = $this->configuration['path'] ?? 'public://media/';
+    }
 
     $destination = $destination_folder . $row->getSourceProperty('file_name');
 
@@ -69,7 +71,8 @@ class MediaFileCopy extends FileCopy implements ContainerFactoryPluginInterface 
     }
 
     // Prepare destination folder.
-    if (strpos($destination_folder, 'rokka' !== 0)) {
+    // Updated to use explicit property name rather than string check.
+    if (empty($this->configuration['skip_create'])) {
       // Check if a writable directory exists, and if not try to create it.
       $dir = $this->getDirectory($destination);
       // If the directory exists and is writable, avoid file_prepare_directory()
